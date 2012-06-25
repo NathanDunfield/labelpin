@@ -67,7 +67,7 @@ def convert_file_to_bitmap(in_file, out_file, pixels_per_pt=1):
     # If it's PostScript-based, use GhostScript to convert to a bitmap.
     if is_postscript_file(in_file):
         os.system("gs -sDEVICE=ppmraw -dEPSCrop -dNOPAUSE -dBATCH -dSAFER -q " +
-                  "-dAlignToPixels=0 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 " + 
+                  "-dAlignToPixels=0 -dTextAlphaBits=4 -dUseCropBox -dGraphicsAlphaBits=4 " + 
                   "-r%d -sOutputFile=%s %s" % (72*pixels_per_pt, out_file, in_file))
     else:
         # Use ImageMagick and pray.
