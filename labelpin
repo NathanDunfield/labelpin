@@ -6,7 +6,7 @@ executable with "chmod +x labelpin" (without the quotes).
 
 For usage instructions, see below.
 
-Version 1.0 of 2010/11/22
+Version 1.1 of 2012/6/25
 
 By Nathan Dunfield : http://dunfield.info
 
@@ -54,9 +54,12 @@ pinlabel_suffix_text = r"""\endlabellist
 \label{fig:label}
 \end{figure}"""
 
-import os, sys, tempfile, string, Tkinter
+import os, sys, re, tempfile, string, Tkinter
 from optparse import OptionParser
 
+def file_extension(file_name):
+    return os.path.splitext(file_name)[-1].lower()
+    
 def is_postscript_file(file_name):
     return os.path.splitext(file_name)[-1].lower() in ['.eps','.pdf']
 
@@ -70,7 +73,14 @@ def convert_file_to_bitmap(in_file, out_file, pixels_per_pt=1):
         # Use ImageMagick and pray.
         os.system("convert %s %s" % (in_file, out_file))
 
-        
+def get_bounding_box(in_file):
+    if file_extension(in_file) == '.eps':
+        data = open(in_file).read()
+    else:
+        data = ''
+    box = re.search("%%BoundingBox:\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)", data)
+    return [int(x) for x in box.groups()[:2]] if box else [0,0]
+      
 def label_file(file_to_label):
     # Start Tk
     root = Tkinter.Tk()
@@ -81,6 +91,7 @@ def label_file(file_to_label):
     pixels_per_pt = 2 if is_postscript_file(file_to_label) else 1
     convert_file_to_bitmap(file_to_label, image_file, pixels_per_pt)
     tkpi = Tkinter.PhotoImage(file=image_file)
+    bbx, bby = get_bounding_box(file_to_label)
 
     W, H = tkpi.width(), tkpi.height()
     w, h = W/pixels_per_pt, H/pixels_per_pt
@@ -101,7 +112,7 @@ def label_file(file_to_label):
         x, y = event.x, event.y
         r = 6
         print " \pinlabel {$%s$} [ ] at %d %d" % (string.letters[image_canvas.circle_count % len(string.letters)],
-                                                    x/pixels_per_pt, h - y/pixels_per_pt)
+                                                    x/pixels_per_pt + bbx, h - y/pixels_per_pt + bby)
         image_canvas.create_oval(x-r, y-r, x+r, y+r,outline="black", fill="red")
         image_canvas.circle_count += 1
         
