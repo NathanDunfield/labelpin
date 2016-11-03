@@ -19,29 +19,7 @@ where file in ".eps" file, a ".pdf" file, or bitmap file such as ".png", ".jpg",
 
 A window will appear with image, and simply click on it to generate
 the label locations, which are output on the terminal window.  The
-resulting LaTeX code is intended for use with the following macros:
-
-\import{tikz}
-\usetikzlibrary{positioning}
-
-\makeatletter
-\def\tikzoverlay{%
-    \pgfutil@ifnextchar[{\tikzoverlay@opt}{\tikzoveraly@opt[]}%
-}
-\def\tikzoverlay@opt[#1]#2{%
-    \begin{tikzpicture}
-        \node[anchor=south west, inner sep=0] (image) at (0,0) {\includegraphics[#1]{#2}};
-        \newdimen\nmd@tikzoverlaywidth
-        \pgfextractx{\nmd@tikzoverlaywidth}{\pgfpointanchor{image}{south east}}
-        \begin{scope}
-          \tikzset{x=0.01\nmd@tikzoverlaywidth}
-          \tikzset{y=0.01\nmd@tikzoverlaywidth}
-}
-\def\endtikzoverlay{%
-    \end{scope}
-    \end{tikzpicture}
-}
-\makeatother
+resulting LaTeX code is intended for use with the "tikzoverlay" package.  
 
 Requirements:
 
@@ -69,7 +47,7 @@ prefix_text_2 = r"""
 suffix_text =  "\\end{tikzoverlay}\n\\end{center}\n  \\caption{}\n  \\label{fig-}\n\\end{figure}"
 
 import os, sys, tempfile, string, Tkinter
-from optparse import OptionParser
+import argparse 
 
 def is_postscript_file(file_name):
     return os.path.splitext(file_name)[-1].lower() in ['.eps','.pdf']
@@ -85,7 +63,7 @@ def convert_file_to_bitmap(in_file, out_file, pixels_per_pt=1):
         os.system("convert %s %s" % (in_file, out_file))
 
         
-def label_file(file_to_label):
+def label_file(file_to_label, abs_coordinates=False):
     # Start Tk
     root = Tkinter.Tk()
 
@@ -99,13 +77,19 @@ def label_file(file_to_label):
     W, H = tkpi.width(), tkpi.height()
     x_scale = 100.0/W
   
-    # Print the inital TeX code 
-    print( prefix_text_1 + prefix_text_2 % (base_name) )
+    # Print the inital TeX code
+    prefix = prefix_text_1 + prefix_text_2 % (base_name)
+    suffix = suffix_text
+    if abs_coordinates:
+        prefix = prefix.replace('tikzoverlay', 'tikzoverlayabs')
+        suffix = suffix.replace('tikzoverlay', 'tikzoverlayabs')
+    print(prefix)
 
     # Start Tk
 
     root.geometry('+%d+%d' % (100,100))
     root.geometry('%dx%d' % (W, H))
+    root.wm_attributes("-topmost", True)
     
     image_canvas = Tkinter.Canvas(root, width=W, height=H, bd=0, highlightthickness=0)
     image_canvas.create_image( (0,0), anchor="nw", image=tkpi)
@@ -114,7 +98,11 @@ def label_file(file_to_label):
     def process_click(event):
         x, y = event.x, event.y
         r = 6
-        print( "    \\node[] at (%.1f,%.1f) {$%s$};" % (x_scale * x, x_scale*(H - y),
+        if abs_coordinates:
+            xy = '(%.3f,%.3f)' % (x/(1.0*W), (H - y)/(1.0*H))
+        else:
+            xy = '(%.1f,%.1f)' % (x_scale * x, x_scale*(H - y))
+        print( "    \\node[] at %s {$%s$};" % (xy,
                                       string.letters[image_canvas.circle_count % len(string.letters)]) )
         image_canvas.create_oval(x-r, y-r, x+r, y+r,outline="black", fill="red")
         image_canvas.circle_count += 1
@@ -126,21 +114,20 @@ def label_file(file_to_label):
     root.mainloop()
 
     # Print the rest of the TeX code and clean up
-    print( suffix_text  )
+    print( suffix )
     os.remove(image_file)
 
 if __name__ == "__main__":
-    parser = OptionParser()
-    parser.set_usage(help_str)
-    options, args = parser.parse_args()
-    if len(args) == 0:
-        print( "Sorry, no file specified." )
-
-    for file_to_label in args:
+    parser = argparse.ArgumentParser(description=help_str,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-a', '--abs', action='store_true', help='Use absolute positioning.')
+    parser.add_argument('infiles', nargs='+', type=str)
+    args = parser.parse_args()
+    for file_to_label in args.infiles:
         if not os.path.exists(file_to_label):
-            print( "Sorry, the file you specified (%s) does not exist." % file_to_label)
+            print("** Sorry, the file you specified (%s) does not exist." % file_to_label )
         else:
-            label_file(file_to_label)
+            label_file(file_to_label, args.abs)
 
 
 
