@@ -17,7 +17,7 @@ your path and make it executable (`chmod +x labelpin`). For usage
 instructions, do `labelpin -h`.
 
 
-Alternatives to pinlabel.sty include [overpic], [WARMReader], the
+Alternatives to pinlabel.sty include [overpic], WARMReader, the
 import environment of [xypic], and [TikZ]. It's easy to modify the
 `labelpin` script to handle any of these, and I have done so for xypic
 and TikZ in the form of `labelxy` and `labeltikz`. The TikZ version
@@ -27,9 +27,9 @@ repository.
 Personally, I use the TikZ variant since it's easy to add additional
 graphical elements beyond just labels. 
 
-[pinlabel.sty]: http://www.ctan.org/tex-archive/help/Catalogue/entries/pinlabel.ht
+[pinlabel.sty]: http://www.ctan.org/tex-archive/help/Catalogue/entries/pinlabel.html
 [MSP journals]: http://mathscipub.org/
 [pinlabeler]: http://hans.math.upenn.edu/~pstorm/pinlabeler.html
+[xypic]: http://www.ctan.org/tex-archive/help/Catalogue/entries/xypic.html
 [overpic]: http://www.ctan.org/tex-archive/help/Catalogue/entries/overpic.html
-[WARMReader]: http://www.cds.caltech.edu/~wgm/WARM/reader2001.html
 [TikZ]: http://www.ctan.org/pkg/pgf
