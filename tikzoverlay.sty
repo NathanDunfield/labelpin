@@ -1,0 +1,54 @@
+% Simple graphics overlay environment fo TikZ.
+%
+%  By Nathan Dunfield.   This code is in the public domain. 
+%
+% USAGE:  \begin{tikzoverlay}[<graphics opts>]{file name}[tikz opts]
+%              (tikz commands in coordinate system where horizontal
+%              direction is 100)
+%              \end{tikzoverlay}
+%
+% The variant tikzoverlayabs uses coordinates going from (0,0) to (1,1).
+%
+% Modeled on 
+%
+% http://bazaar.launchpad.net/~tex-sx/tex-sx/development/view/head:/onimage.dtx
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tikzoverlay}[2012/07/18]
+\RequirePackage{tikz}
+
+\makeatletter
+
+\def\tikzoverlay{%
+    \pgfutil@ifnextchar[{\tikzoverlay@opt}{\tikzoveraly@opt[]}%
+}
+\def\tikzoverlay@opt[#1]#2{%
+    \begin{tikzpicture}
+        \node[anchor=south west, inner sep=0] (image) at (0,0) {\includegraphics[#1]{#2}};
+        \newdimen\nmd@tikzoverlaywidth
+        \pgfextractx{\nmd@tikzoverlaywidth}{\pgfpointanchor{image}{south east}}
+        \begin{scope}
+          \tikzset{x=0.01\nmd@tikzoverlaywidth}
+          \tikzset{y=0.01\nmd@tikzoverlaywidth}
+}
+\def\endtikzoverlay{%
+    \end{scope}
+    \end{tikzpicture}
+}
+
+\def\tikzoverlayabs{%
+    \pgfutil@ifnextchar[{\tikzoverlayabs@opt}{\tikzoveralyabs@opt[]}%
+}
+\def\tikzoverlayabs@opt[#1]#2{%
+    \begin{tikzpicture}
+        \node[anchor=south west, inner sep=0] (image) at (0,0) {\includegraphics[#1]{#2}};
+        \begin{scope}
+          \tikzset{x=(image.south east)}
+          \tikzset{y=(image.north west)}
+}
+\def\endtikzoverlayabs{%
+    \end{scope}
+    \end{tikzpicture}
+}
+
+\makeatother

@@ -60,7 +60,7 @@ def convert_file_to_bitmap(in_file, out_file, pixels_per_pt=1):
                   "-r%d -sOutputFile=%s %s" % (72*pixels_per_pt, out_file, in_file))
     else:
         # Use ImageMagick and pray.
-        os.system("convert %s %s" % (in_file, out_file))
+        os.system("convert -background white -alpha remove %s %s" % (in_file, out_file))
 
         
 def label_file(file_to_label, abs_coordinates=False):
