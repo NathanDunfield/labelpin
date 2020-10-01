@@ -1,12 +1,15 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 
 """
 Installation instructions: Place this script in your path and make it
-executable with "chmod +x labelxy" (without the quotes).
+executable with "chmod +x labelxy" (without the quotes).  If it
+complains you don't have "python" try changing "python" to "python3"
+in the first line of this file.
+
 
 For usage instructions, see below.
 
-Version 1.1 of 2012/6/25
+Version 1.2 of 2020/9/29
 
 By Nathan Dunfield : http://dunfield.info
 
@@ -50,8 +53,8 @@ On OS X, the is first built in and the others are included with the
 MacTeX-2010 distribution: http://www.tug.org/mactex/
 
 On Linux, are all available as standard packages, with the first
-called "python-tk" on Ubuntu/Debian and "tkinter" on
-Fedora/Mandriva/PCLinuxOS.
+called "python-tk" or "python3-tk" on Ubuntu/Debian and "tkinter" on
+Fedora.
 """
 
 prefix_text_1 = r"""% Click on the window that appeared to generate the label
@@ -65,8 +68,15 @@ prefix_text_2 = r"""
 
 suffix_text =  "\\end{cxyoverpic}\n  \\caption{}\n  \\label{fig-}\n\\end{figure}"
 
-import os, sys, tempfile, string, Tkinter
+import os, sys, tempfile
 from optparse import OptionParser
+
+from string import ascii_letters as letters
+
+try:
+    import tkinter
+except ImportError:
+    import Tkinter as tkinter
 
 def is_postscript_file(file_name):
     return os.path.splitext(file_name)[-1].lower() in ['.eps','.pdf']
@@ -84,14 +94,14 @@ def convert_file_to_bitmap(in_file, out_file, pixels_per_pt=1):
         
 def label_file(file_to_label):
     # Start Tk
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
 
     # Load the image file
     base_name = os.path.splitext(file_to_label)[0]
     image_file = tempfile.mktemp() + ".ppm"
     pixels_per_pt = 2 if is_postscript_file(file_to_label) else 1
     convert_file_to_bitmap(file_to_label, image_file, pixels_per_pt)
-    tkpi = Tkinter.PhotoImage(file=image_file)
+    tkpi = tkinter.PhotoImage(file=image_file)
 
     W, H = tkpi.width(), tkpi.height()
     w, h = W/pixels_per_pt, H/pixels_per_pt
@@ -104,7 +114,7 @@ def label_file(file_to_label):
     root.geometry('+%d+%d' % (100,100))
     root.geometry('%dx%d' % (W, H))
     
-    image_canvas = Tkinter.Canvas(root, width=W, height=H, bd=0, highlightthickness=0)
+    image_canvas = tkinter.Canvas(root, width=W, height=H, bd=0, highlightthickness=0)
     image_canvas.create_image( (0,0), anchor="nw", image=tkpi)
     image_canvas.circle_count = 0
     
@@ -112,7 +122,7 @@ def label_file(file_to_label):
         x, y = event.x, event.y
         r = 6
         print( "    ,(%d,%d)*{%s}" % (x/pixels_per_pt, h - y/pixels_per_pt,
-                                      string.letters[image_canvas.circle_count % len(string.letters)]) )
+                                      letters[image_canvas.circle_count % len(letters)]) )
         image_canvas.create_oval(x-r, y-r, x+r, y+r,outline="black", fill="red")
         image_canvas.circle_count += 1
         
